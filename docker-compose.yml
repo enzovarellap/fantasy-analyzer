@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: fantasy-analyzer-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-fantasy_analyzer}
+      MYSQL_USER: ${MYSQL_USER:-fantasy_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-fantasy_pass}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/src/main/resources/db/init:/docker-entrypoint-initdb.d
+    networks:
+      - fantasy-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fantasy-analyzer-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-fantasy_analyzer}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-fantasy_user}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-fantasy_pass}
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-please-change-in-production}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    networks:
+      - fantasy-network
+    volumes:
+      # Mount for hot reload in development (optional)
+      - ./backend/src:/app/src
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # React Web Frontend (to be implemented)
+  # web:
+  #   build:
+  #     context: ./web
+  #     dockerfile: Dockerfile
+  #   container_name: fantasy-analyzer-web
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - backend
+  #   environment:
+  #     REACT_APP_API_URL: http://localhost:8080/api
+  #   ports:
+  #     - "${WEB_PORT:-3000}:3000"
+  #   networks:
+  #     - fantasy-network
+  #   volumes:
+  #     - ./web/src:/app/src
+  #     - ./web/public:/app/public
+
+networks:
+  fantasy-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local

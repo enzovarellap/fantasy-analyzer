@@ -1,0 +1,78 @@
+name: Dependency Update
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  update-backend-dependencies:
+    name: Update Backend Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Update Maven dependencies
+        working-directory: ./backend
+        run: |
+          ./mvnw versions:use-latest-releases
+          ./mvnw versions:update-properties
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(deps): update backend dependencies'
+          title: 'chore(deps): Update Backend Dependencies'
+          body: |
+            Automated dependency update for backend.
+
+            Please review the changes and ensure all tests pass.
+          branch: chore/update-backend-deps
+          labels: dependencies, backend
+
+  update-web-dependencies:
+    name: Update Web Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Update npm dependencies
+        working-directory: ./web
+        run: |
+          npx npm-check-updates -u
+          npm install
+
+      - name: Run tests
+        working-directory: ./web
+        run: npm test -- --watchAll=false
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(deps): update web dependencies'
+          title: 'chore(deps): Update Web Dependencies'
+          body: |
+            Automated dependency update for web frontend.
+
+            Please review the changes and ensure all tests pass.
+          branch: chore/update-web-deps
+          labels: dependencies, web
