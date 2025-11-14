@@ -1,0 +1,79 @@
+# Fantasy Analyzer - Production Profile Configuration
+
+spring:
+  # DataSource Configuration - MySQL (from environment variables)
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT:3306}/${MYSQL_DATABASE}?useSSL=true&requireSSL=true&serverTimezone=UTC
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+
+  # JPA Configuration
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate # Never use update/create in production!
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # Disable DevTools in production
+  devtools:
+    restart:
+      enabled: false
+    livereload:
+      enabled: false
+
+# Server Configuration
+server:
+  error:
+    include-stacktrace: never
+    include-exception: false
+  compression:
+    enabled: true
+
+# Logging Configuration for Production
+logging:
+  level:
+    root: WARN
+    com.fantasyfootball.fantasy_analyzer: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+  file:
+    name: /var/log/fantasy-analyzer/fantasy-analyzer.log
+    max-size: 10MB
+    max-history: 30
+
+# Management/Actuator - Restricted in production
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# SpringDoc - Consider disabling or restricting in production
+springdoc:
+  swagger-ui:
+    enabled: false # Set to true if you want Swagger in production
+  api-docs:
+    enabled: true
+
+# JWT Configuration (MUST be set via environment variables)
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:86400000}

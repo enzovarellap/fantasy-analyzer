@@ -1,0 +1,46 @@
+version: '3.8'
+
+# Development-specific overrides
+# Use: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  mysql:
+    ports:
+      - "3307:3306"  # Different port to avoid conflicts with local MySQL
+    environment:
+      MYSQL_ROOT_PASSWORD: devroot
+      MYSQL_DATABASE: fantasy_analyzer_dev
+      MYSQL_USER: dev_user
+      MYSQL_PASSWORD: dev_pass
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+      args:
+        - MAVEN_OPTS=-Dmaven.repo.local=/root/.m2/repository
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
+      LOGGING_LEVEL_COM_FANTASYFOOTBALL: DEBUG
+    volumes:
+      # Mount source for hot reload
+      - ./backend/src:/app/src
+      # Cache Maven dependencies
+      - maven_cache:/root/.m2
+    ports:
+      - "8080:8080"
+      - "5005:5005"  # Debug port
+    command: >
+      java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+      -XX:+UseContainerSupport
+      -XX:MaxRAMPercentage=75.0
+      -Dspring.profiles.active=dev
+      -Dspring.devtools.restart.enabled=true
+      -jar app.jar
+
+volumes:
+  maven_cache:
+    driver: local
