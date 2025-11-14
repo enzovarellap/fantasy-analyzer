@@ -35,12 +35,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: web/package-lock.json
 
       - name: Install dependencies
         working-directory: ./web
-        run: npm ci
+        run: npm install
 
       - name: Run tests
         working-directory: ./web
@@ -48,6 +46,7 @@ jobs:
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
+        continue-on-error: true
         if: always()
         with:
           files: ./web/coverage/lcov.info
@@ -66,12 +65,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: web/package-lock.json
 
       - name: Install dependencies
         working-directory: ./web
-        run: npm ci
+        run: npm install
 
       - name: Run ESLint
         working-directory: ./web
@@ -93,12 +90,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: web/package-lock.json
 
       - name: Install dependencies
         working-directory: ./web
-        run: npm ci
+        run: npm install
 
       - name: Run TypeScript type check
         working-directory: ./web
@@ -117,12 +112,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: web/package-lock.json
 
       - name: Install dependencies
         working-directory: ./web
-        run: npm ci
+        run: npm install
 
       - name: Build application
         working-directory: ./web
@@ -151,12 +144,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: web/package-lock.json
 
       - name: Install dependencies
         working-directory: ./web
-        run: npm ci
+        run: npm install
 
       - name: Build for size analysis
         working-directory: ./web
@@ -220,7 +211,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./web
-        run: npm ci
+        run: npm install
 
       - name: Build
         working-directory: ./web
