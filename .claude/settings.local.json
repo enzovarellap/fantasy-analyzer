@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.sleeper.com)",
+      "WebSearch",
+      "Bash(./mvnw clean compile)",
+      "Bash(./mvnw spring-boot:run -Dspring-boot.run.arguments=--spring.profiles.active=dev)",
+      "Bash(curl -X POST http://localhost:8080/api/auth/register )"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
